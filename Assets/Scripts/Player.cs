@@ -12,58 +12,81 @@ public class Player : MonoBehaviour
     // Update is called once per frame
 
     private bool isWalking;
+
+    //creates a new gameInput Reference
+    [SerializeField] private GameInput gameInput;
     private void Update()
     {
+     
 
-        //since we have 2 axis forward and back and left and right we can use a Vector2 and convert it later to a Vector3
-        Vector2 inputVector = new Vector2(0, 0);
-
-        //Input.GetKey ~ this method allows us to get the key of a button press as long as it pressed which is good for movement in game
-        //Input.GetKeyDown ~ this method gets the key everytime its pressed so only once which is good to use for a character jump
-        //in this case since were going to code in movement were going to use the GetKey
-        if (Input.GetKey(KeyCode.W))
-        {
-            //for testing to see if something works we can send a message to the console using debug
-            //Debug.Log("W is being pressed!");
-
-            //moving the character
-            inputVector.y = 1;
-        }
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            //for testing to see if something works we can send a message to the console using debug
-            //Debug.Log("W is being pressed!");
-
-            inputVector.x = -1;
-
-        }
-
-        if (Input.GetKey(KeyCode.S))
-        {
-            //for testing to see if something works we can send a message to the console using debug
-            //Debug.Log("W is being pressed!");
-
-            inputVector.y = -1;
-        }
-
-        if (Input.GetKey(KeyCode.D))
-        {
-            //for testing to see if something works we can send a message to the console using debug
-            //Debug.Log("W is being pressed!");
-
-            inputVector.x = 1;
-        }
+        Vector2 inputVector = gameInput.getMovementVectorNormalized();
+      
 
 
-        //this will normalize our input vector so that if we strafe left or right meaning pressing (w) & (d) at the same time our character will not move faster then they should so all directions move at 
-        //the same speed
-        inputVector = inputVector.normalized;
+
+
 
         //we didnt make a vector 3 from the beginning because it doesnt make sense logicaly when we move were only going to be move up down left right so we should first get the input then actually move the object
         //this seperation is going to be usefull later
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
-        transform.position += moveDir * Time.deltaTime * moveSpeed; //this allows us to move at a constant speed so it doesnt matter the fps so the movement is always framrate independent
+
+
+        //were going to use raycast which fires a laser from a certain point in a certain direction telling you if it hit something and this is what were going to use for collision
+        //do it before we move
+
+        //takes a vector 3 for the origin, a vector 3 for the direction and a float for the maxdistance, this returns a bool true if it hits something false if not
+        //we used the players postion for the origin, the move dir for the direction and created a playwidth float for the distance
+        /*        bool canMove = !Physics.Raycast(transform.position, moveDir, playerSize);*/ //put a explanation mark so opposite happens 
+
+        //were going to use capsule cast instead for our character so the side of them doesnt clip through the object
+        
+        float moveDistance = moveSpeed * Time.deltaTime;
+        float playerHeight = 2f;
+        float playerRadius = .7f;
+        //so when we use capsulecast we need the position the height of the player the player radius or width the movedir and the move distance and this form of object collision is much mor accurate 
+        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight , playerRadius, moveDir, moveDistance);
+
+
+
+        if (!canMove)
+        {
+            //in here meaning we cannot move in this direction and were going to solve the problem in which when you move diagonally beside the wall you dont stay stuck there it 
+            //the player should hug the wall and move slowly left or right like what would typically happen in a game 
+            //attempt only X movement
+
+            Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
+            canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistance);
+            if (canMove)
+            {
+                //Can move only on the X axis
+                moveDir = moveDirX;
+            }
+            else
+            {
+                //Else cannot move only the X so lets attempt Z movement 
+                Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
+                canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
+
+                if (canMove)
+                {
+                    //can move only on the z
+                    moveDir = moveDirZ;
+                }
+                else
+                {
+                    //cannot move in any direction
+                }
+            }
+        }
+
+        //now we made a if statement with our transform position code in there so we only move if the raycast is false meaning nothing was detected
+        if (canMove)
+        {
+            transform.position += moveDir * moveDistance; //this allows us to move at a constant speed so it doesnt matter the fps so the movement is always framrate independent
+        }
+        
+
+
 
 
         //how to add rotation
