@@ -1,9 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameInput : MonoBehaviour {
-
+    //creating event so we can do soemthing when the player interacts with the counter
+    public event EventHandler OnInteractAction;
     private PlayerInputActions inputActions;
     private void Awake()
     {
@@ -13,6 +15,24 @@ public class GameInput : MonoBehaviour {
         //enabled action map
         inputActions.Player.Enable();
 
+        //we use this and the performed event to notify us when the player has pressed a key
+        inputActions.Player.Interact.performed += Interact_performed;
+
+    }
+
+    private void Interact_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    {
+        //in here is what happens when you press that key
+
+        OnInteractAction ?.Invoke (this, EventArgs.Empty); 
+        //if we have not subscribers to the event no listeners then the OnInteractAction is going to be null and trigger a null exception error
+        //we used a null conditional operator to fix this so basically if the oninteractaction is null then it wont run the code after (this, eventargs.empty) but if its not null it will run it 
+
+        //the above is the same as the following just more compact
+        //if(OnInteractAction != null)
+        //{
+        //   OnInteractAction(this, EventArgs.Empty);
+       // }
 
     }
 

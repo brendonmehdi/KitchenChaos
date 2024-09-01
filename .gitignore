@@ -53,6 +53,7 @@ sdk/
 # Exclude ScriptableObject cache (specific paths instead of global)
 # Consider removing this if important .asset files are being ignored
 # *.asset
+.vs/
 
 # Ignore build output
 *.apk

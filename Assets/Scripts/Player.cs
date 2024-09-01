@@ -13,14 +13,136 @@ public class Player : MonoBehaviour
 
     private bool isWalking;
 
+    //we have to make a variable to stor the last direction the player was facing so the interact doesnt dissapear when the player stops moving 
+    //because when the player stops moving the vector3 is ( 0 0 0 ) so since theres no direction the interact wont return any data because it thinks theres nothing there since were not moving towards the object 
+    private Vector3 lastInteractDirection;
+
     //creates a new gameInput Reference
     [SerializeField] private GameInput gameInput;
+
+
+    //Creating Layermask
+    [SerializeField] private LayerMask countersLayermask;
+
+    private void Start()
+    {
+        //always listen on start not awake
+        //below is the code we use to listen to the input then we can do something when the input is clicked 
+        gameInput.OnInteractAction += GameInput_OnInteractAction;
+    }
+
+    private void GameInput_OnInteractAction(object sender, System.EventArgs e)
+    {
+        Vector2 inputVector = gameInput.getMovementVectorNormalized();
+
+
+
+
+
+
+        //we didnt make a vector 3 from the beginning because it doesnt make sense logicaly when we move were only going to be move up down left right so we should first get the input then actually move the object
+        //this seperation is going to be usefull later
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+        if (moveDir != Vector3.zero)
+        {
+            //this means were moving in a direction since its not zero lets make the lastinteract direction equal to this value
+            lastInteractDirection = moveDir;
+        }
+        float interactDistance = 2f;
+
+        //usually the function below jus returns a boolean but using the out RaycastHit we also make it return data from the collision if we hit something we can use this data to identify the item that we hit
+
+        //below it will debug to the log which object were hitting in the game
+        //were also going to be using a layermask which essentially instead of returning one object it will return the data from a layermask
+        //so we used this layermask to raycast only against counter object so if there was soemthing infront of the counter it will only look for the counter
+        if (Physics.Raycast(transform.position, lastInteractDirection, out RaycastHit raycastHit, interactDistance, countersLayermask))
+        {
+            //Debug.Log(raycastHit.transform); returns what were hitting to the log
+
+            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter))
+            {
+                //returns bool tru or false if correct type
+                //so here we know this has the component were looking for which is clearcounter
+                clearCounter.Interact();
+
+            }
+
+            //trygetcomponent is the same thing as the following except it automatically handles the null check for you
+            //ClearCounter clearCounter = raycastHit.transform.GetComponent<ClearCounter>();
+            //if (clearCounter != null)
+            //{
+            //returns bool true or false if correct type
+            //}
+            //the tryGetComponent way is just more compact  
+
+        }
+    }
+
     private void Update()
     {
-     
+        HandleMovement();
+        HandleInteractions();
+    }
+
+    //we have to make a function to return what the player is doing this class so we can tell the animator when the player is walking to play the walk animation
+    public bool IsWalking()
+    {
+        return isWalking; //returning if true or false 
+    }
+
+    private void HandleInteractions()
+    {
 
         Vector2 inputVector = gameInput.getMovementVectorNormalized();
-      
+
+
+
+
+
+
+        //we didnt make a vector 3 from the beginning because it doesnt make sense logicaly when we move were only going to be move up down left right so we should first get the input then actually move the object
+        //this seperation is going to be usefull later
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+        if(moveDir != Vector3.zero)
+        {
+            //this means were moving in a direction since its not zero lets make the lastinteract direction equal to this value
+            lastInteractDirection = moveDir;
+        }
+        float interactDistance = 2f;
+
+        //usually the function below jus returns a boolean but using the out RaycastHit we also make it return data from the collision if we hit something we can use this data to identify the item that we hit
+       
+        //below it will debug to the log which object were hitting in the game
+        //were also going to be using a layermask which essentially instead of returning one object it will return the data from a layermask
+        //so we used this layermask to raycast only against counter object so if there was soemthing infront of the counter it will only look for the counter
+        if(Physics.Raycast(transform.position, lastInteractDirection, out RaycastHit raycastHit, interactDistance, countersLayermask))
+        {
+            //Debug.Log(raycastHit.transform); returns what were hitting to the log
+
+            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter)) {
+                //returns bool tru or false if correct type
+                //so here we know this has the component were looking for which is clearcounter
+                //clearCounter.Interact();
+
+            }
+
+            //trygetcomponent is the same thing as the following except it automatically handles the null check for you
+            //ClearCounter clearCounter = raycastHit.transform.GetComponent<ClearCounter>();
+            //if (clearCounter != null)
+            //{
+                //returns bool true or false if correct type
+            //}
+            //the tryGetComponent way is just more compact  
+
+        } 
+    }
+
+    private void HandleMovement()
+    {
+
+
+        Vector2 inputVector = gameInput.getMovementVectorNormalized();
+
 
 
 
@@ -39,12 +161,12 @@ public class Player : MonoBehaviour
         /*        bool canMove = !Physics.Raycast(transform.position, moveDir, playerSize);*/ //put a explanation mark so opposite happens 
 
         //were going to use capsule cast instead for our character so the side of them doesnt clip through the object
-        
+
         float moveDistance = moveSpeed * Time.deltaTime;
         float playerHeight = 2f;
         float playerRadius = .7f;
         //so when we use capsulecast we need the position the height of the player the player radius or width the movedir and the move distance and this form of object collision is much mor accurate 
-        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight , playerRadius, moveDir, moveDistance);
+        bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
 
 
 
@@ -84,7 +206,7 @@ public class Player : MonoBehaviour
         {
             transform.position += moveDir * moveDistance; //this allows us to move at a constant speed so it doesnt matter the fps so the movement is always framrate independent
         }
-        
+
 
 
 
@@ -105,11 +227,5 @@ public class Player : MonoBehaviour
         float rotateSpeed = 10f;
         transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
         //the above makes it so over time our character will rotate towards the direction theyre moving in
-    }
-
-    //we have to make a function to return what the player is doing this class so we can tell the animator when the player is walking to play the walk animation
-    public bool IsWalking()
-    {
-        return isWalking; //returning if true or false 
     }
 }
