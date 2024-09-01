@@ -27,6 +27,7 @@ public class Player : MonoBehaviour
     private void Start()
     {
         //always listen on start not awake
+        //below is the code we use to listen to the input then we can do something when the input is clicked 
         gameInput.OnInteractAction += GameInput_OnInteractAction;
     }
 
