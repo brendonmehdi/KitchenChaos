@@ -19,6 +19,12 @@ public class Player : MonoBehaviour
 
     //creates a new gameInput Reference
     [SerializeField] private GameInput gameInput;
+
+
+    //Creating Layermask
+    [SerializeField] private LayerMask countersLayermask;
+
+
     private void Update()
     {
         HandleMovement();
@@ -54,14 +60,28 @@ public class Player : MonoBehaviour
         //usually the function below jus returns a boolean but using the out RaycastHit we also make it return data from the collision if we hit something we can use this data to identify the item that we hit
        
         //below it will debug to the log which object were hitting in the game
-        if(Physics.Raycast(transform.position, lastInteractDirection, out RaycastHit raycastHit, interactDistance))
+        //were also going to be using a layermask which essentially instead of returning one object it will return the data from a layermask
+        //so we used this layermask to raycast only against counter object so if there was soemthing infront of the counter it will only look for the counter
+        if(Physics.Raycast(transform.position, lastInteractDirection, out RaycastHit raycastHit, interactDistance, countersLayermask))
         {
-            Debug.Log(raycastHit.transform);
-        }
-        else
-        {
-            Debug.Log("-");
-        }
+            //Debug.Log(raycastHit.transform); returns what were hitting to the log
+
+            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter)) {
+                //returns bool tru or false if correct type
+                //so here we know this has the component were looking for which is clearcounter
+                clearCounter.Interact();
+
+            }
+
+            //trygetcomponent is the same thing as the following except it automatically handles the null check for you
+            //ClearCounter clearCounter = raycastHit.transform.GetComponent<ClearCounter>();
+            //if (clearCounter != null)
+            //{
+                //returns bool true or false if correct type
+            //}
+            //the tryGetComponent way is just more compact  
+
+        } 
     }
 
     private void HandleMovement()
