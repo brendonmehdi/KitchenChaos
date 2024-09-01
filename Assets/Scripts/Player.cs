@@ -24,6 +24,58 @@ public class Player : MonoBehaviour
     //Creating Layermask
     [SerializeField] private LayerMask countersLayermask;
 
+    private void Start()
+    {
+        //always listen on start not awake
+        gameInput.OnInteractAction += GameInput_OnInteractAction;
+    }
+
+    private void GameInput_OnInteractAction(object sender, System.EventArgs e)
+    {
+        Vector2 inputVector = gameInput.getMovementVectorNormalized();
+
+
+
+
+
+
+        //we didnt make a vector 3 from the beginning because it doesnt make sense logicaly when we move were only going to be move up down left right so we should first get the input then actually move the object
+        //this seperation is going to be usefull later
+        Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+        if (moveDir != Vector3.zero)
+        {
+            //this means were moving in a direction since its not zero lets make the lastinteract direction equal to this value
+            lastInteractDirection = moveDir;
+        }
+        float interactDistance = 2f;
+
+        //usually the function below jus returns a boolean but using the out RaycastHit we also make it return data from the collision if we hit something we can use this data to identify the item that we hit
+
+        //below it will debug to the log which object were hitting in the game
+        //were also going to be using a layermask which essentially instead of returning one object it will return the data from a layermask
+        //so we used this layermask to raycast only against counter object so if there was soemthing infront of the counter it will only look for the counter
+        if (Physics.Raycast(transform.position, lastInteractDirection, out RaycastHit raycastHit, interactDistance, countersLayermask))
+        {
+            //Debug.Log(raycastHit.transform); returns what were hitting to the log
+
+            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter))
+            {
+                //returns bool tru or false if correct type
+                //so here we know this has the component were looking for which is clearcounter
+                clearCounter.Interact();
+
+            }
+
+            //trygetcomponent is the same thing as the following except it automatically handles the null check for you
+            //ClearCounter clearCounter = raycastHit.transform.GetComponent<ClearCounter>();
+            //if (clearCounter != null)
+            //{
+            //returns bool true or false if correct type
+            //}
+            //the tryGetComponent way is just more compact  
+
+        }
+    }
 
     private void Update()
     {
@@ -69,7 +121,7 @@ public class Player : MonoBehaviour
             if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter)) {
                 //returns bool tru or false if correct type
                 //so here we know this has the component were looking for which is clearcounter
-                clearCounter.Interact();
+                //clearCounter.Interact();
 
             }
 
