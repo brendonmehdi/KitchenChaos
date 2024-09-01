@@ -38,6 +38,8 @@ sdk/
 
 # VS Code settings
 .vscode/
+.vs/
+
 
 # Rider project files
 .idea/
